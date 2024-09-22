@@ -14,26 +14,41 @@ session = Session(bind=ENGINE)
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-# Helper function to get the current user from the JWT token
 def get_current_user(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()  # Require a valid token from cookies
+    Authorize.jwt_required()
     current_user = session.query(User).filter(User.username == Authorize.get_jwt_subject()).first()
     if not current_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return current_user
 
 
-# Only admin can create a product
 @router.post("/create", response_model=ProductRegister)
-async def create_product(product: ProductRegister, Authorize: AuthJWT = Depends()):
-    current_user = get_current_user(Authorize)
-    if current_user.status != UserStatus.ADMIN:
+async def create_product(
+        product: ProductRegister,
+        Authorize: AuthJWT = Depends()
+):
+    Authorize.jwt_required()
+    current_user_id = get_current_user(Authorize)
+
+    user = session.query(User).filter(User.id == current_user_id).first()
+
+    if not user or user.status != UserStatus.ADMIN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
-    new_product = Product(**product.dict())
+    new_product = Product(
+        name=product.name,
+        description=product.description,
+        image=product.image,
+        price1=product.price1,
+        price2=product.price2,
+        material=product.material,
+        count=product.count,
+        slug=product.slug
+    )
     session.add(new_product)
     session.commit()
     session.refresh(new_product)
+
     return new_product
 
 
@@ -85,24 +100,32 @@ async def change_user_status(user_id: int, new_status: UserStatus, Authorize: Au
     # Require valid JWT token
     Authorize.jwt_required()
 
-    # Get the current logged-in user
     current_user_username = Authorize.get_jwt_subject()
     current_user = session.query(User).filter(User.username == current_user_username).first()
 
-    # Ensure that the current user is an admin
     if current_user.status != UserStatus.ADMIN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="You do not have permission to perform this action")
 
-    # Find the user whose status needs to be updated
     user_to_update = session.query(User).filter(User.id == user_id).first()
 
     if not user_to_update:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Update the user's status
     user_to_update.status = new_status
     session.commit()
 
     return {"status_code": 200,
             "detail": f"User {user_to_update.username}'s status has been changed to {new_status.value}"}
+
+
+@router.get("/search/{slug}", response_model=ProductRegister)
+async def get_product_by_slug(slug: str, Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+
+    product = session.query(Product).filter(Product.slug == slug).first()
+
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    return product

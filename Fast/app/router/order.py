@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from .database import ENGINE, Session
-from .models import Order, User
-from .schemas import OrderCreate, OrderResponse
+from Fast.app.database import ENGINE, Session
+from Fast.app.models import Order, User
+from Fast.app.schemas import OrderCreate, OrderResponse
 from typing import List
-from fastapi_jwt_auth import AuthJWT  # For token authentication
+from fastapi_jwt_auth import AuthJWT
 
 order_router = APIRouter(prefix="/orders", tags=["Order"])
 
-# Create a database session
 session = Session(bind=ENGINE)
 
 
@@ -17,7 +15,7 @@ session = Session(bind=ENGINE)
 async def create_order(order: OrderCreate, Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
 
-    current_user = Authorize.get_jwt_subject()  # Get current user's username from the token
+    current_user = Authorize.get_jwt_subject()
     user = session.query(User).filter(User.username == current_user).first()
 
     if not user:

@@ -22,12 +22,12 @@ class UserRegister(BaseModel):
 class ProductUpdate(BaseModel):
     name: Optional[str]
     description: Optional[str]
+    image: Optional[str]
     material: Optional[str]
     price1: Optional[float]
     price2: Optional[float]
     status: Optional[bool]
     featured: Optional[bool]
-    country_id: Optional[int]
     count: Optional[int]
     slug: Optional[str]
 
@@ -35,10 +35,10 @@ class ProductUpdate(BaseModel):
 class ProductRegister(BaseModel):
     name: Optional[str]
     description: Optional[str]
+    image: Optional[str]
     material: Optional[str]
     price1: Optional[float]
     price2: Optional[float]
-    country_id: Optional[int]
     count: Optional[int]
     slug: Optional[str]
 
@@ -61,3 +61,25 @@ class UserPartialUpdate(BaseModel):
 
 class CountryCreate(BaseModel):
     name: Optional[str]
+
+
+class OrderCreate(BaseModel):
+    user_id: Optional[str]
+    product_id: Optional[str]
+    quantity: Optional[str]
+
+
+class OrderResponse(BaseModel):
+    user_id: Optional[int]
+    product_id: Optional[int]
+    quantity: Optional[int]
+
+
+class DeliveryCreate(BaseModel):
+    user_id: Optional[int]
+    order_id: Optional[int]
+
+
+class DeliveryResponse(BaseModel):
+    user_id: Optional[int]
+    order_id: Optional[int]

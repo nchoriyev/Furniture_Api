@@ -14,7 +14,6 @@ class Country(Base):
 
     # Relationship to City and Product
     cities = relationship('City', back_populates='country_relation')
-    products = relationship('Product', back_populates='country_relation')
 
 
 class City(Base):
@@ -45,17 +44,16 @@ class Product(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     description = Column(Text)
+    image = Column(Text)
     material = Column(String)
     price1 = Column(Float)
     price2 = Column(Float)
     status = Column(Boolean, default=True)
     featured = Column(Boolean, default=False)
-    country_id = Column(ForeignKey('country.id'), nullable=False)
     count = Column(Integer)
     slug = Column(String)
-    created_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=func.now())
 
-    country_relation = relationship('Country', back_populates='products')
 
 
 class UserStatus(enum.Enum):
@@ -117,3 +115,4 @@ class Contact(Base):
     email = Column(String(50), nullable=False)
     message = Column(Text)
     created_at = Column(DateTime(timezone=True), default=func.now())
+
